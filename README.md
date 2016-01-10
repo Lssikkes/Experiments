@@ -1,2 +1,2 @@
 # Experiments
-Various small experiments that might prove useful to others.
+Various small experiments in code.
