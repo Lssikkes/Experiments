@@ -1,5 +1,5 @@
 /*
-My experiments with batcher's odd-even sort, bitonic sort & radix sort
+Experiments with batcher's odd-even sort, bitonic sort & radix sort.
 Creating various permutations of sorting algorithms with different properties.
 Intended for usage in GPU parallel sorting, prototyped on CPU.
 Compiled using Visual Studio 2012.
@@ -20,6 +20,7 @@ void exchange(int* a, int i, int j) {
 }
 
 void compare(int* a, int i, int j) {
+	//printf("compare %d %d\n", i, j);
     if (a[i] > a[j])
         exchange(a, i, j);
 }
@@ -226,6 +227,31 @@ void bitonicSort(T* a, unsigned int n)
 	}
 }
 
+template <class T>
+void bitonicSort_v2(T* a, unsigned int n)
+{
+	int N = n;
+	int HalfN = n/2;
+	int vi, i, j, k;
+	for (k = 2; k <= N; k <<= 1) 
+	{
+		for (j = k >> 1; j > 0; j >>= 1)
+		{
+			int invJmask = ~(j-1);
+			for (vi = 0; vi < HalfN; vi++)
+			{
+				i = vi + (vi & invJmask);
+				int ixj = i + j;
+
+				if ((i&k) == 0)
+					compare(a, i, ixj);
+				else
+					compare(a, ixj, i);
+			}
+		}
+	}
+}
+
 void radixSort(int* arr, int N, unsigned int bitStart, unsigned int numBits)
 {
 #	define RADIX_BIN(val) (((val) >> bitStart) & mask)
@@ -313,6 +339,7 @@ int main() {
 	runTest(a, n, [](int* a, int n) { oddEvenMergeSort_Partner(a, n); });
 	runTest(a, n, [](int* a, int n) { oddEvenMergeSort_Partner_MT(a, n); });
 	runTest(a, n, [](int* a, int n) { bitonicSort(a, n); });
+	runTest(a, n, [](int* a, int n) { bitonicSort_v2(a, n); });
 
 	// standard library sort
 	runTest(a, n, [](int* a, int n) { std::sort(a, a+n); });
@@ -326,3 +353,4 @@ int main() {
 
 	return(0);
 }
+
