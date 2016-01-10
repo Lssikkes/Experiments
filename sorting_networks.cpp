@@ -1,7 +1,6 @@
 /*
 My experiments with batcher's odd-even sort, creating various permutations of the algorithm with different properties.
 Intended for usage in GPU parallel sorting, prototyped on CPU.
-
 Compiled using Visual Studio 2012.
 (Dependencies include _BitScanReverse/concurrency::parallel_for/<ppl.h>/__rdtsc/__debugbreak, but can be easily removed)
 */
@@ -227,6 +226,43 @@ void bitonicSort(T* a, unsigned int n)
 	}
 }
 
+void radixSort(int* arr, int N, unsigned int bitStart, unsigned int numBits)
+{
+#	define RADIX_BIN(val) (((val) >> bitStart) & mask)
+
+	int* tmpArr = (int*)_alloca(sizeof(int)*N);
+	unsigned int bitMask = (1 << bitStart);
+
+	unsigned int counts[256];
+	unsigned int index[256];
+	unsigned int bits = (1 << numBits);
+	unsigned int mask = bits-1;
+	unsigned int idx = 0;
+	unsigned int idx2 = 0;
+
+	memset(counts, 0, bits*sizeof(unsigned int));
+	memset(index, 0, bits * sizeof(unsigned int));
+
+	// count
+	for (int i = 0; i < N; i++)
+		++counts[RADIX_BIN(arr[i])];
+
+	// calculate indices (prefix sum - exclusive scan)
+	index[0] = 0;
+	for (int i = 1; i < (1 << numBits); i++)
+		index[i] = index[i-1]+counts[i-1];
+
+	// sort
+	for (int i = 0; i < N; i++)
+		tmpArr[index[RADIX_BIN(arr[i])]++] = arr[i];
+
+	// scatter
+	for (int i = 0; i < N; i++)
+		arr[i] = tmpArr[i];
+
+#	undef RADIX_BIN
+}
+
 
 const int NUM_TESTS = 1000;
 
@@ -266,16 +302,27 @@ int main() {
 	int a[2048];
 	int n=sizeof(a)/sizeof(a[0]);
 	for(int i=0; i<n; i++)
-		a[i] = rand()%15;
+		//a[i] = i/(n/16);					// sequential
+		//a[i] = 15-(i/(n/16));				// reverse sequential
+		a[i] = rand()%15;					// randomized
 
-	// method 1
-	runTest(a, n, [](int* a, int n) { std::sort(a, a+n); });
+	// comparison sorting networks
 	runTest(a, n, [](int* a, int n) { oddEvenMergeSort_Merge(a, n); });
 	runTest(a, n, [](int* a, int n) { oddEvenMergeSort_NCPasses_Branchless(a, n); });
 	runTest(a, n, [](int* a, int n) { oddEvenMergeSort_NCPasses_Branched(a, n); });
 	runTest(a, n, [](int* a, int n) { oddEvenMergeSort_Partner(a, n); });
 	runTest(a, n, [](int* a, int n) { oddEvenMergeSort_Partner_MT(a, n); });
 	runTest(a, n, [](int* a, int n) { bitonicSort(a, n); });
+
+	// standard library sort
+	runTest(a, n, [](int* a, int n) { std::sort(a, a+n); });
+
+	// radix sorts
+	runTest(a, n, [](int* a, int n) { radixSort(a, n, 0, 4);});
+	runTest(a, n, [](int* a, int n) { for (int i = 0; i < 8; i += 4) radixSort(a, n, i, 4);});
+	runTest(a, n, [](int* a, int n) { for (int i = 0; i < 16; i += 4) radixSort(a, n, i, 4);});
+	runTest(a, n, [](int* a, int n) { for (int i = 0; i < 16; i += 8) radixSort(a, n, i, 8);});
+	runTest(a, n, [](int* a, int n) { for (int i = 0; i < 32; i += 8) radixSort(a, n, i, 8);});
 
 	return(0);
 }
