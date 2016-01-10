@@ -30,12 +30,11 @@ void compare(int* a, int i, int j) {
  * n is the length of the piece to be merged,
  * r is the distance of the elements to be compared
  */
-void oddEvenMerge_r1(int* a, int lo, int n, int r) {
-	
-    int m = r * 2;
-    if (m >= n) {
+void oddEvenMerge_r1(int* a, int lo, int n, int r)
+{
+	int m = r * 2;
+	if (m >= n)
 		compare(a, lo, lo + r);
-    } 
 	else
 	{
 		oddEvenMerge_r1(a, lo, n, m); // even subsequence
@@ -228,8 +227,8 @@ int main() {
 
 		unsigned long long clk = __rdtsc();
 
-    // different versions of batcher's odd even merge sort (recursive, non recursive, stateless, branchless (if processor supports branchless CAS) & multithreaded)
-    // ----
+		// different versions of batcher's odd even merge sort (recursive, non recursive, stateless, branchless (if processor supports branchless CAS) & multithreaded)
+    		// ----
 		//oddEvenMergeSort_Merge(b, n);
 		//oddEvenMergeSort_NCPasses_Branchless(b,n);
 		//oddEvenMergeSort_NCPasses_Branched(b,n);
@@ -244,7 +243,7 @@ int main() {
 		for (int i = 0; i < n; i++)
 		{
 			if(b[i] < v)
-        __debugbreak();
+        			__debugbreak();
 			else
 				v = b[i];
 		}
