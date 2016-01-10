@@ -20,6 +20,7 @@ void exchange(int* a, int i, int j) {
 }
 
 void compare(int* a, int i, int j) {
+	//printf("compare %d %d\n", i, j);
     if (a[i] > a[j])
         exchange(a, i, j);
 }
@@ -30,11 +31,12 @@ void compare(int* a, int i, int j) {
  * n is the length of the piece to be merged,
  * r is the distance of the elements to be compared
  */
-void oddEvenMerge_r1(int* a, int lo, int n, int r)
-{
-	int m = r * 2;
-	if (m >= n)
+void oddEvenMerge_r1(int* a, int lo, int n, int r) {
+	
+    int m = r * 2;
+    if (m >= n) {
 		compare(a, lo, lo + r);
+    } 
 	else
 	{
 		oddEvenMerge_r1(a, lo, n, m); // even subsequence
@@ -139,9 +141,9 @@ void oddEvenMergeSort_NCPasses_Branched(int* a, int n)
 			{
 				for(int lo=k; lo < k+r; lo++)
 				{
-					if(r==(j>>1))   // pass 0
+					if(r==(j>>1))
 						compare(a, lo, lo + r);
-					else            // pass 1-N
+					else
 					{
 						int m = r << 1;
 						for (int i = lo + r; i + r < lo + j; i += m)
@@ -164,10 +166,8 @@ unsigned int oddEvenMergeSort_GetPartner(int n, int l, int p)
 	int nDivScale = (n/scale);
 	int sn = nDivScale - ( nDivScale / box) * box;
 
-	if (sn == 0 || sn == (box - 1)) 
+	if (sn == 0 || sn == (box - 1) || (sn & 1) == 0) 
 		return n;
-	if ((sn & 1) == 0) 
-		return n - scale;
 	else
 		return n + scale;
 }
@@ -204,37 +204,42 @@ void oddEvenMergeSort_Partner_MT(int* a, unsigned int _n)
 	}
 }
 
+template <class T>
+void bitonicSort(T* a, unsigned int n)
+{
+	int N = n;
+	int vi, i, j, k;
+	for (k = 2; k <= N; k = 2 * k) 
+	{
+		for (j = k >> 1; j > 0; j = j >> 1)
+		{
+			for (vi = 0; vi < N / 2; vi++)
+			{
+				i = vi + (vi / j)*j;
+				int ixj = i + j;
 
-#define NUM_TESTS 1000
+				if ((i&k) == 0)
+					compare(a, i, ixj);
+				else
+					compare(a, ixj, i);
+			}
+		}
+	}
+}
 
-int main() {
 
-	//int n = sizeof(a) / sizeof(a[0]);
-	int a[2048];
+const int NUM_TESTS = 1000;
 
-	//int a[] = {4,3,7,8,5,2,6,1, 4,3,7,8,5,2,6,1};
-	
-	int n=2048;
-	for(int i=0; i<n; i++)
-		a[i] = rand()%15;
-
-	// method 1
+template<class T> bool runTest(int* a, int n, const T& testfunc)
+{
 	unsigned long long timing=0;
 	for(int i=0; i<NUM_TESTS; i++)
 	{
 		int b[2048];
-		memcpy(b, a, sizeof(a));
+		memcpy(b, a, n*sizeof(int));
 
 		unsigned long long clk = __rdtsc();
-
-		// different versions of batcher's odd even merge sort (recursive, non recursive, stateless, branchless (if processor supports branchless CAS) & multithreaded)
-    		// ----
-		//oddEvenMergeSort_Merge(b, n);
-		//oddEvenMergeSort_NCPasses_Branchless(b,n);
-		//oddEvenMergeSort_NCPasses_Branched(b,n);
-		//oddEvenMergeSort_Partner(b, n);
-		oddEvenMergeSort_Partner_MT(b, n);
-
+		testfunc(b,n);
 		unsigned long long clk1 = __rdtsc();
 
 		timing += (clk1-clk);
@@ -243,14 +248,34 @@ int main() {
 		for (int i = 0; i < n; i++)
 		{
 			if(b[i] < v)
-        			__debugbreak();
+			{
+				std::cout << "error detected\n";	
+				return false;
+			}
 			else
 				v = b[i];
 		}
 	}
 
-	std::cout << "execution time: " << timing/NUM_TESTS << " cycles";
+	std::cout << "execution time: " << timing/NUM_TESTS << " cycles\n";
+	return true;
+}
+
+int main() {
+
+	int a[2048];
+	int n=sizeof(a)/sizeof(a[0]);
+	for(int i=0; i<n; i++)
+		a[i] = rand()%15;
+
+	// method 1
+	runTest(a, n, [](int* a, int n) { std::sort(a, a+n); });
+	runTest(a, n, [](int* a, int n) { oddEvenMergeSort_Merge(a, n); });
+	runTest(a, n, [](int* a, int n) { oddEvenMergeSort_NCPasses_Branchless(a, n); });
+	runTest(a, n, [](int* a, int n) { oddEvenMergeSort_NCPasses_Branched(a, n); });
+	runTest(a, n, [](int* a, int n) { oddEvenMergeSort_Partner(a, n); });
+	runTest(a, n, [](int* a, int n) { oddEvenMergeSort_Partner_MT(a, n); });
+	runTest(a, n, [](int* a, int n) { bitonicSort(a, n); });
 
 	return(0);
 }
-
