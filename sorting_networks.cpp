@@ -1,5 +1,6 @@
 /*
-My experiments with batcher's odd-even sort, creating various permutations of the algorithm with different properties.
+My experiments with batcher's odd-even sort, bitonic sort & radix sort
+Creating various permutations of sorting algorithms with different properties.
 Intended for usage in GPU parallel sorting, prototyped on CPU.
 Compiled using Visual Studio 2012.
 (Dependencies include _BitScanReverse/concurrency::parallel_for/<ppl.h>/__rdtsc/__debugbreak, but can be easily removed)
@@ -19,7 +20,6 @@ void exchange(int* a, int i, int j) {
 }
 
 void compare(int* a, int i, int j) {
-	//printf("compare %d %d\n", i, j);
     if (a[i] > a[j])
         exchange(a, i, j);
 }
