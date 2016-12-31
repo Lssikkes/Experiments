@@ -4,34 +4,55 @@
 
 #pragma once
 
-template <int N, class T, int i0, int i1=0, int i2=0, int i3=0>
+template <int N, class T, int i0, int i1 = 0, int i2 = 0, int i3 = 0>
 class float1_swizzle
 {
 public:
-	operator T() { float* src=(float*)&M; return i0<N?src[i0]:0.0f; }
+	operator float() const { float* src = (float*)&M; return i0<N ? src[i0] : 0.0f; }
+	float operator =(float x) { if (i0 < N) ((float*)&M)[i0] = x; return ((float*)&M)[i0]; }
+	float operator +=(float x) { if (i0 < N) ((float*)&M)[i0] += x; return ((float*)&M)[i0]; }
+	float operator -=(float x) { if (i0 < N) ((float*)&M)[i0] -= x; return ((float*)&M)[i0]; }
+	float operator /=(float x) { if (i0 < N) ((float*)&M)[i0] *= x; return ((float*)&M)[i0]; }
+	float operator *=(float x) { if (i0 < N) ((float*)&M)[i0] /= x; return ((float*)&M)[i0]; }
 	char M;
 };
- 
-template <int N, class T, int i0, int i1=0, int i2=0, int i3=0>
+
+template <int N, class T, int i0, int i1 = 0, int i2 = 0, int i3 = 0>
 class float_swizzle
 {
 public:
-	operator T() { float* src=(float*)&M; return T(i0<N?src[i0]:0.0f, i1<N?src[i1]:0.0f, i2<N?src[i2]:0.0f, i3<N?src[i3]:0.0f); }
+	operator T() const { float* src = (float*)&M; return T(i0<N ? src[i0] : 0.0f, i1<N ? src[i1] : 0.0f, i2<N ? src[i2] : 0.0f, i3<N ? src[i3] : 0.0f); }
+	T _get() const { float* src = (float*)&M; return T(i0 < N ? src[i0] : 0.0f, i1 < N ? src[i1] : 0.0f, i2 < N ? src[i2] : 0.0f, i3 < N ? src[i3] : 0.0f); }
+
+	T operator +(const T& x) { return _get() + x; }
+	T operator -(const T& x) { return _get() - x; }
+	T operator /(const T& x) { return _get() / x; }
+	T operator *(const T& x) { return _get() * x; }
 	char M;
 };
- 
+
 template <int N>
 class floatn
 {
 public:
-	floatn(float X=0.0f, float Y=0.0f, float Z=0.0f, float W=0.0f) {if(N>0) xyzw[0] = X; if(N>1) xyzw[1] = Y; if(N>2) xyzw[2] = Z; if(N>3) xyzw[3] = W; }
+	typedef floatn<N> T;
+	floatn(float X=0.0f) { if (N > 0) _xyzw[0] = X; if (N > 1) _xyzw[1] = X; if (N > 2) _xyzw[2] = X; if (N > 3) _xyzw[3] = X; }
+	floatn(float X, float Y) { if (N > 0) _xyzw[0] = X; if (N > 1) _xyzw[1] = Y; if (N > 2) _xyzw[2] = Y; if (N > 3) _xyzw[3] = Y; }
+	floatn(float X, float Y, float Z) { if (N > 0) _xyzw[0] = X; if (N > 1) _xyzw[1] = Y; if (N > 2) _xyzw[2] = Z; if (N > 3) _xyzw[3] = Z; }
+	floatn(float X, float Y, float Z, float W) { if (N > 0) _xyzw[0] = X; if (N > 1) _xyzw[1] = Y; if (N > 2) _xyzw[2] = Z; if (N > 3) _xyzw[3] = W; }
+	T operator +(const T& x) const { T ret; for (int i = 0;i < N; i++) { ret._xyzw[i] = _xyzw[i] + x._xyzw[i]; } return ret; }
+	T operator -(const T& x) const { T ret; for (int i = 0;i < N; i++) { ret._xyzw[i] = _xyzw[i] - x._xyzw[i]; } return ret; }
+	T operator /(const T& x) const { T ret; for (int i = 0;i < N; i++) { ret._xyzw[i] = _xyzw[i] * x._xyzw[i]; } return ret; }
+	T operator *(const T& x) const { T ret; for (int i = 0;i < N; i++) { ret._xyzw[i] = _xyzw[i] / x._xyzw[i]; } return ret; }
+	
+
 	union
 	{
 		struct { float1_swizzle<N, float, 0> x; };
 		struct { float1_swizzle<N, float, 1> y; };
 		struct { float1_swizzle<N, float, 2> z; };
 		struct { float1_swizzle<N, float, 3> w; };
- 
+
 		struct { float_swizzle<N, floatn<2>, 0, 0> xx; };
 		struct { float_swizzle<N, floatn<2>, 0, 1> xy; };
 		struct { float_swizzle<N, floatn<2>, 0, 2> xz; };
@@ -48,7 +69,7 @@ public:
 		struct { float_swizzle<N, floatn<2>, 3, 1> wy; };
 		struct { float_swizzle<N, floatn<2>, 3, 2> wz; };
 		struct { float_swizzle<N, floatn<2>, 3, 3> ww; };
- 
+
 		struct { float_swizzle<N, floatn<3>, 0, 0, 0> xxx; };
 		struct { float_swizzle<N, floatn<3>, 0, 0, 1> xxy; };
 		struct { float_swizzle<N, floatn<3>, 0, 0, 2> xxz; };
@@ -65,7 +86,7 @@ public:
 		struct { float_swizzle<N, floatn<3>, 0, 3, 1> xwy; };
 		struct { float_swizzle<N, floatn<3>, 0, 3, 2> xwz; };
 		struct { float_swizzle<N, floatn<3>, 0, 3, 3> xww; };
- 
+
 		struct { float_swizzle<N, floatn<3>, 1, 0, 0> yxx; };
 		struct { float_swizzle<N, floatn<3>, 1, 0, 1> yxy; };
 		struct { float_swizzle<N, floatn<3>, 1, 0, 2> yxz; };
@@ -82,7 +103,7 @@ public:
 		struct { float_swizzle<N, floatn<3>, 1, 3, 1> ywy; };
 		struct { float_swizzle<N, floatn<3>, 1, 3, 2> ywz; };
 		struct { float_swizzle<N, floatn<3>, 1, 3, 3> yww; };
- 
+
 		struct { float_swizzle<N, floatn<3>, 2, 0, 0> zxx; };
 		struct { float_swizzle<N, floatn<3>, 2, 0, 1> zxy; };
 		struct { float_swizzle<N, floatn<3>, 2, 0, 2> zxz; };
@@ -99,7 +120,7 @@ public:
 		struct { float_swizzle<N, floatn<3>, 2, 3, 1> zwy; };
 		struct { float_swizzle<N, floatn<3>, 2, 3, 2> zwz; };
 		struct { float_swizzle<N, floatn<3>, 2, 3, 3> zww; };
- 
+
 		struct { float_swizzle<N, floatn<3>, 3, 0, 0> wxx; };
 		struct { float_swizzle<N, floatn<3>, 3, 0, 1> wxy; };
 		struct { float_swizzle<N, floatn<3>, 3, 0, 2> wxz; };
@@ -116,7 +137,7 @@ public:
 		struct { float_swizzle<N, floatn<3>, 3, 3, 1> wwy; };
 		struct { float_swizzle<N, floatn<3>, 3, 3, 2> wwz; };
 		struct { float_swizzle<N, floatn<3>, 3, 3, 3> www; };
- 
+
 		struct { float_swizzle<N, floatn<4>, 0, 0, 0, 0> xxxx; };
 		struct { float_swizzle<N, floatn<4>, 0, 0, 0, 1> xxxy; };
 		struct { float_swizzle<N, floatn<4>, 0, 0, 0, 2> xxxz; };
@@ -144,7 +165,7 @@ public:
 		struct { float_swizzle<N, floatn<4>, 0, 1, 2, 0> xyzx; };
 		struct { float_swizzle<N, floatn<4>, 0, 1, 2, 1> xyzy; };
 		struct { float_swizzle<N, floatn<4>, 0, 1, 2, 2> xyzz; };
-		//struct { float_swizzle<N, floatn<4>, 0, 1, 2, 3> xyzw; };
+		struct { float_swizzle<N, floatn<4>, 0, 1, 2, 3> xyzw; };
 		struct { float_swizzle<N, floatn<4>, 0, 1, 3, 0> xywx; };
 		struct { float_swizzle<N, floatn<4>, 0, 1, 3, 1> xywy; };
 		struct { float_swizzle<N, floatn<4>, 0, 1, 3, 2> xywz; };
@@ -181,7 +202,7 @@ public:
 		struct { float_swizzle<N, floatn<4>, 0, 3, 3, 1> xwwy; };
 		struct { float_swizzle<N, floatn<4>, 0, 3, 3, 2> xwwz; };
 		struct { float_swizzle<N, floatn<4>, 0, 3, 3, 3> xwww; };
- 
+
 		struct { float_swizzle<N, floatn<4>, 1, 0, 0, 0> yxxx; };
 		struct { float_swizzle<N, floatn<4>, 1, 0, 0, 1> yxxy; };
 		struct { float_swizzle<N, floatn<4>, 1, 0, 0, 2> yxxz; };
@@ -246,7 +267,7 @@ public:
 		struct { float_swizzle<N, floatn<4>, 1, 3, 3, 1> ywwy; };
 		struct { float_swizzle<N, floatn<4>, 1, 3, 3, 2> ywwz; };
 		struct { float_swizzle<N, floatn<4>, 1, 3, 3, 3> ywww; };
- 
+
 		struct { float_swizzle<N, floatn<4>, 2, 0, 0, 0> zxxx; };
 		struct { float_swizzle<N, floatn<4>, 2, 0, 0, 1> zxxy; };
 		struct { float_swizzle<N, floatn<4>, 2, 0, 0, 2> zxxz; };
@@ -311,7 +332,7 @@ public:
 		struct { float_swizzle<N, floatn<4>, 2, 3, 3, 1> zwwy; };
 		struct { float_swizzle<N, floatn<4>, 2, 3, 3, 2> zwwz; };
 		struct { float_swizzle<N, floatn<4>, 2, 3, 3, 3> zwww; };
- 
+
 		struct { float_swizzle<N, floatn<4>, 3, 0, 0, 0> wxxx; };
 		struct { float_swizzle<N, floatn<4>, 3, 0, 0, 1> wxxy; };
 		struct { float_swizzle<N, floatn<4>, 3, 0, 0, 2> wxxz; };
@@ -376,23 +397,25 @@ public:
 		struct { float_swizzle<N, floatn<4>, 3, 3, 3, 1> wwwy; };
 		struct { float_swizzle<N, floatn<4>, 3, 3, 3, 2> wwwz; };
 		struct { float_swizzle<N, floatn<4>, 3, 3, 3, 3> wwww; };
- 
-		struct { float xyzw[N]; };
+
+		struct { float _xyzw[N]; };
 	};
 };
- 
+
 typedef floatn<2> float2;
 typedef floatn<3> float3;
 typedef floatn<4> float4;
- 
+
 #include <iostream>
 using namespace std;
 
- 
+
 int main() {
-	float2 x(10.0f, 20.0f);
-	float3 y=x.xyz;
-	float4 z=x.xyyy;
+	const float2 x(10.0f, 20.0f);
+	//float3 y = x.xyz;
+	float4 z = x.xyyy;
+	float3 y = z.xyz + float3(1.0f,2.0f);
+	z.y = 6.66f;
 	std::cout << x.x << "," << x.y << "\n";
 	std::cout << y.x << "," << y.y << "," << y.z << "\n";
 	std::cout << z.x << "," << z.y << "," << z.z << "," << z.w << "\n";
