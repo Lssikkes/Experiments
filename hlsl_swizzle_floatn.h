@@ -37,8 +37,8 @@ class floatn
 public:
 	typedef floatn<N> T;
 	floatn(float X=0.0f) { if (N > 0) _xyzw[0] = X; if (N > 1) _xyzw[1] = X; if (N > 2) _xyzw[2] = X; if (N > 3) _xyzw[3] = X; }
-	floatn(float X, float Y) { if (N > 0) _xyzw[0] = X; if (N > 1) _xyzw[1] = Y; if (N > 2) _xyzw[2] = Y; if (N > 3) _xyzw[3] = Y; }
-	floatn(float X, float Y, float Z) { if (N > 0) _xyzw[0] = X; if (N > 1) _xyzw[1] = Y; if (N > 2) _xyzw[2] = Z; if (N > 3) _xyzw[3] = Z; }
+	floatn(float X, float Y) { if (N > 0) _xyzw[0] = X; if (N > 1) _xyzw[1] = Y; if (N > 2) _xyzw[2] = 0.0f; if (N > 3) _xyzw[3] = 0.0f; }
+	floatn(float X, float Y, float Z) { if (N > 0) _xyzw[0] = X; if (N > 1) _xyzw[1] = Y; if (N > 2) _xyzw[2] = Z; if (N > 3) _xyzw[3] = 0.0f; }
 	floatn(float X, float Y, float Z, float W) { if (N > 0) _xyzw[0] = X; if (N > 1) _xyzw[1] = Y; if (N > 2) _xyzw[2] = Z; if (N > 3) _xyzw[3] = W; }
 	T operator +(const T& x) const { T ret; for (int i = 0;i < N; i++) { ret._xyzw[i] = _xyzw[i] + x._xyzw[i]; } return ret; }
 	T operator -(const T& x) const { T ret; for (int i = 0;i < N; i++) { ret._xyzw[i] = _xyzw[i] - x._xyzw[i]; } return ret; }
