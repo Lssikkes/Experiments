@@ -127,10 +127,13 @@ void eventEmitRecurtree(SEventState& state, const SEvent& ev)
 {
 	std::vector<int> consider;
 	
+	consider.insert(consider.end(), state.cache.leaf.begin(), state.cache.leaf.end());
+
 	for (auto itKeywordBase = ev.topics.begin(); itKeywordBase != ev.topics.end(); itKeywordBase++)
 	{
 		auto itKeyword = itKeywordBase;
 		SEventConsumerCache* current = &state.cache;
+		
 		while (itKeyword != ev.topics.end())
 		{
 			auto it = current->keyword.find(*(itKeyword++));
@@ -178,6 +181,7 @@ bool testValidity(const T& eventFunc)
 #define test(x) if((x) == false) { printf("Test failed: %s\n", #x); ret = false; } else { printf("Test succeeded: %s\n", #x); }
 	printf("-------------------------\n");
 	bool ret = true;
+	test(testValidityPermutation({ {  } }, { "hello" }, eventFunc) == 1);
 	test(testValidityPermutation({ { "hello" } }, { "hello" }, eventFunc) == 1);
 	test(testValidityPermutation({ { "hello", "test" } }, { "hello" }, eventFunc) == 0);
 	test(testValidityPermutation({ { "hello" } }, { "hello", "test" }, eventFunc) == 1);
@@ -224,13 +228,14 @@ void testProfile(const T& eventFunc)
 	// Start emitting events.
 	double timeConsumerEventEmit = timeGetCurrentSeconds();
 
+	SEvent e;
+	e.topics.insert("type=log");
+	e.topics.insert("id=100");
+	e.topics.insert("cat");
 	//#pragma omp parallel for
 	for (int i = 0; i < numEvents; i++)
 	{
-		SEvent e;
-		e.topics.insert("type=log");
-		e.topics.insert("id=100");
- 		e.topics.insert("cat");
+
 		eventFunc(state, e);
 	}
 
