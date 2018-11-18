@@ -10,7 +10,7 @@ do
         container=`basename "$dir"`
         if [ -f "$dir/$container-json.log" ]; then
                 echo \* Pruning container log \'$container\'
-                tail -n 250000 $dir/$container-json.log > $dir/$container-json.log.2
-                mv $dir/$container-json.log.2 $dir/$container-json.log -f
+                mv $dir/$container-json.log $dir/$container-json.log.2 -f
+                tail -n 100000 $dir/$container-json.log.2 > $dir/$container-json.log
         fi
 done
